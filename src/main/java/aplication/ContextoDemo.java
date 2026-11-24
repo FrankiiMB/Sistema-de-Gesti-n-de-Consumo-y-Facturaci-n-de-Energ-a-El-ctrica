@@ -5,8 +5,8 @@ import java.util.List;
 
 public class ContextoDemo {
 
-    // false = Ingresa solo eligiendo el actor en el ComboBox (Modo Demo / Sustentación)
-    // true  = Exige escribir usuario/código y clave ("1234")
+    // false = Entra sin validar credenciales (Modo Demo)
+    // true  = Valida que el usuario y clave existan para el rol elegido
     public static boolean VALIDAR_CREDENCIALES = false;
 
     public static class ActorItem {
@@ -30,8 +30,25 @@ public class ContextoDemo {
         }
     }
 
+    public static class CuentaUsuario {
+        public String codigoUsuario;
+        public String clave;
+        public String nombreCompleto;
+        public String documento;
+        public String rolAsignado;
+
+        public CuentaUsuario(String codigoUsuario, String clave, String nombreCompleto, String documento, String rolAsignado) {
+            this.codigoUsuario = codigoUsuario;
+            this.clave = clave;
+            this.nombreCompleto = nombreCompleto;
+            this.documento = documento;
+            this.rolAsignado = rolAsignado;
+        }
+    }
+
     private static ActorItem actorActual;
     private static final List<ActorItem> actores = new ArrayList<>();
+    public static final List<CuentaUsuario> cuentasRegistradas = new ArrayList<>();
 
     // Tablas compartidas en memoria para los 3 procesos
     public static final List<String[]> listaSolicitudes = new ArrayList<>();
@@ -39,7 +56,10 @@ public class ContextoDemo {
     public static final List<String[]> listaMorosidadCortes = new ArrayList<>();
 
     static {
-        // Los 15 actores del sistema
+        // 1. PRIMERA OPCIÓN: ADMINISTRADOR
+        actores.add(new ActorItem("Sistema", "Administrador", "ADM-001", "admin123", "Administrador General"));
+
+        // 2. RESTO DE ACTORES DEL SISTEMA
         actores.add(new ActorItem("Cliente", "Cliente / Titular del suministro", "C-0001", "1234", "Carlos Mendoza"));
         actores.add(new ActorItem("Trabajador", "Auxiliar Comercial", "T-0001", "1234", "Ana Torres"));
         actores.add(new ActorItem("Trabajador", "Supervisor de Control Comercial", "T-0002", "1234", "Luis Paredes"));
@@ -56,20 +76,30 @@ public class ContextoDemo {
         actores.add(new ActorItem("Trabajador", "Asistente de Recaudación", "T-0009", "1234", "Pedro Vega"));
         actores.add(new ActorItem("Externo", "Entidad Recaudadora / CAR", "E-0001", "1234", "Agente BCP / Yape CAR"));
 
-        // Datos precargados - Proceso 1: Alta de Nuevo Suministro
+        // Cargar las cuentas iniciales en la tabla de usuarios registrados
+        for (ActorItem a : actores) {
+            cuentasRegistradas.add(new CuentaUsuario(a.codigo, a.clave, a.nombrePersona, "00000000", a.rol));
+        }
+
+        // Datos precargados de los 3 procesos
         listaSolicitudes.add(new String[]{"SOL-001", "María López", "DNI: 45871236", "PROPIETARIO", "Av. Pardo 450 - Chimbote", "NO (Libre)", "PENDIENTE_REVISION"});
         listaSolicitudes.add(new String[]{"SOL-002", "Pedro Quispe", "DNI: 71239845", "INQUILINO", "Jr. Bolognesi 210 - Chimbote", "SÍ (Deuda RN-04)", "PENDIENTE_REVISION"});
         listaSolicitudes.add(new String[]{"SOL-003", "Inversiones Norte SAC", "RUC: 20541236981", "PROPIETARIO", "Urb. Buenos Aires Mz B Lt 4", "NO (Libre)", "FACTIBILIDAD_APROBADA"});
 
-        // Datos precargados - Proceso 2: Lectura, Facturación y Reparto
         listaLecturasRecibos.add(new String[]{"SUM-405812", "Carlos Mendoza", "1420.5", "1580.0", "159.5 kWh", "S/ 145.55", "EMITIDO - EN REPARTO"});
         listaLecturasRecibos.add(new String[]{"SUM-405813", "María López", "890.0", "1010.0", "120.0 kWh", "S/ 112.10", "ENTREGADO AL CLIENTE"});
-        listaLecturasRecibos.add(new String[]{"SUM-405814", "Comercial Chimbote", "3200.0", "3200.0", "0.0 kWh", "S/ 10.03", "OBSERVADO (INCIDENCIA)"});
 
-        // Datos precargados - Proceso 3: Morosidad, Corte y Reconexión
         listaMorosidadCortes.add(new String[]{"SUM-102938", "Carlos Mendoza", "2 meses", "S/ 312.40", "ACTIVO - CANDIDATO A CORTE"});
         listaMorosidadCortes.add(new String[]{"SUM-884712", "Pedro Quispe", "3 meses", "S/ 485.90", "CORTADO (TIPO I - FUSIBLE)"});
-        listaMorosidadCortes.add(new String[]{"SUM-554120", "María López", "1 mes", "S/ 98.50", "EN SEGUIMIENTO (< 2 MESES)"});
+    }
+
+    public static CuentaUsuario buscarCuenta(String usuario, String clave, String rol) {
+        return cuentasRegistradas.stream()
+                .filter(c -> c.rolAsignado.equals(rol)
+                        && c.codigoUsuario.equalsIgnoreCase(usuario)
+                        && c.clave.equals(clave))
+                .findFirst()
+                .orElse(null);
     }
 
     public static ActorItem getActorActual() { return actorActual; }
