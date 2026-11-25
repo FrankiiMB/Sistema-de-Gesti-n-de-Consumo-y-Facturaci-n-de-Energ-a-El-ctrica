@@ -2,34 +2,35 @@ package aplication;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
-import javafx.scene.image.Image;
 
 public class MainApp extends Application {
 
-    private Stage stage;
+    private Stage primaryStage;
+    private Scene mainScene;
 
     @Override
     public void start(Stage primaryStage) {
-        this.stage = primaryStage;
-        this.stage.setTitle("Sistema de Gestión de Consumo y Facturación de Energía Eléctrica");
+        this.primaryStage = primaryStage;
+        this.primaryStage.setTitle("HIDRANDINA S.A. - SGCFE");
 
-        // Asignar el logo como icono de la ventana y barra de tareas
-        var iconStream = getClass().getResourceAsStream("/logo.png");
-        if (iconStream != null) {
-            this.stage.getIcons().add(new Image(iconStream));
-        }
+        this.primaryStage.setMinWidth(980);
+        this.primaryStage.setMinHeight(640);
+
+        this.mainScene = new Scene(new Pane(), 1120, 700);
+        this.primaryStage.setScene(mainScene);
 
         mostrarLogin();
-        this.stage.show();
+        this.primaryStage.show();
     }
 
     public void mostrarLogin() {
-        stage.setScene(new Scene(new LoginView(this).getView(), 1020, 650));
+        mainScene.setRoot(new LoginView(this).getView());
     }
 
     public void mostrarDashboard() {
-        stage.setScene(new Scene(new DashboardView(this).getView(), 1020, 650));
+        mainScene.setRoot(new DashboardView(this).getView());
     }
 
     public static void main(String[] args) {

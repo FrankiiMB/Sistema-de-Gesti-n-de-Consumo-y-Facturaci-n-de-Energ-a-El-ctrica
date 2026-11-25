@@ -1,5 +1,6 @@
 package aplication;
 
+import database.UsuarioDAO.UsuarioDTO;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -11,18 +12,15 @@ import javafx.scene.text.FontWeight;
 
 public class VistaProcesoAlta {
 
-    // VISTA 1A: Formulario del Cliente con CheckBoxes de requisitos (HU-01 y RN-02)
+    // VISTA 1A: Formulario del Cliente (HU-01 y RN-02)
     public Parent vistaPresentarSolicitud() {
         VBox root = new VBox(12);
-        root.setPadding(new Insets(25, 35, 25, 35));
-        root.setStyle("-fx-background-color: #F4F7FA;");
+        root.setPadding(new Insets(20, 30, 20, 30));
 
         Label lblTitulo = new Label("Presentar solicitud de nuevo suministro (HU-01)");
-        lblTitulo.setFont(Font.font("System", FontWeight.BOLD, 20));
-        lblTitulo.setStyle("-fx-text-fill: #003B73;");
+        lblTitulo.setFont(Font.font("System", FontWeight.BOLD, 18));
 
         Label lblSub = new Label("El propietario o inquilino con carta poder presenta su solicitud y marca los documentos adjuntos (RN-02).");
-        lblSub.setStyle("-fx-text-fill: #52606D; -fx-font-size: 12px;");
 
         TitledPane panelDatos = new TitledPane();
         panelDatos.setText("Datos del solicitante y documentos");
@@ -34,26 +32,36 @@ public class VistaProcesoAlta {
         grid.setPadding(new Insets(16));
         grid.getColumnConstraints().addAll(new ColumnConstraints(220), new ColumnConstraints(320));
 
+        UsuarioDTO u = ContextoSistema.getUsuario();
+        boolean esCliente = u != null && "Cliente".equalsIgnoreCase(u.categoriaRol);
+
         ComboBox<String> cmbTipoPersona = new ComboBox<>(FXCollections.observableArrayList("NATURAL", "JURIDICA"));
-        cmbTipoPersona.setValue("NATURAL");
+        cmbTipoPersona.setValue(esCliente && u.tipoPersona != null ? u.tipoPersona : "NATURAL");
         cmbTipoPersona.setMaxWidth(Double.MAX_VALUE);
 
         ComboBox<String> cmbTipoDoc = new ComboBox<>(FXCollections.observableArrayList("DNI", "RUC"));
-        cmbTipoDoc.setValue("DNI");
+        cmbTipoDoc.setValue(esCliente && u.tipoDocumento != null ? u.tipoDocumento : "DNI");
         cmbTipoDoc.setMaxWidth(Double.MAX_VALUE);
 
-        TextField txtNumDoc = new TextField();
+        TextField txtNumDoc = new TextField(esCliente && u.numeroDocumentoIdentidad != null ? u.numeroDocumentoIdentidad : "");
         txtNumDoc.setPromptText("Ej. 46892310");
 
-        TextField txtNombres = new TextField();
+        TextField txtNombres = new TextField(esCliente ? u.getNombreCompleto() : "");
         txtNombres.setPromptText("Nombres y apellidos / Razón social");
 
-        TextField txtDireccion = new TextField();
+        TextField txtDireccion = new TextField(esCliente && u.direccion != null ? u.direccion : "");
         txtDireccion.setPromptText("Dirección del predio (Ej. Av. Pacífico 320)");
 
         ComboBox<String> cmbCondicion = new ComboBox<>(FXCollections.observableArrayList("PROPIETARIO", "INQUILINO"));
-        cmbCondicion.setValue("PROPIETARIO");
+        cmbCondicion.setValue(esCliente && u.condicionCliente != null ? u.condicionCliente : "PROPIETARIO");
         cmbCondicion.setMaxWidth(Double.MAX_VALUE);
+
+        if (esCliente) {
+            cmbTipoPersona.setDisable(true);
+            cmbTipoDoc.setDisable(true);
+            txtNumDoc.setEditable(false);
+            txtNombres.setEditable(false);
+        }
 
         CheckBox chkCarta = new CheckBox("Carta de solicitud");
         CheckBox chkAutovaluo = new CheckBox("Autovalúo y acreditación de propiedad");
@@ -64,44 +72,45 @@ public class VistaProcesoAlta {
 
         VBox boxDocs = new VBox(6, chkCarta, chkAutovaluo, chkCroquis, chkPoder, chkArrend, chkConst);
 
-        grid.add(new Label("Tipo de persona:"), 0, 0); grid.add(cmbTipoPersona, 1, 0);
-        grid.add(new Label("Tipo de documento:"), 0, 1); grid.add(cmbTipoDoc, 1, 1);
-        grid.add(new Label("N° de documento:"), 0, 2); grid.add(txtNumDoc, 1, 2);
-        grid.add(new Label("Nombres / Razón social:"), 0, 3); grid.add(txtNombres, 1, 3);
-        grid.add(new Label("Dirección del predio:"), 0, 4); grid.add(txtDireccion, 1, 4);
-        grid.add(new Label("Condición del solicitante:"), 0, 5); grid.add(cmbCondicion, 1, 5);
-        grid.add(new Label("Documentos que presenta:"), 0, 6); grid.add(boxDocs, 1, 6);
+        grid.add(new Label("Tipo de persona:"), 0, 0);          grid.add(cmbTipoPersona, 1, 0);
+        grid.add(new Label("Tipo de documento:"), 0, 1);        grid.add(cmbTipoDoc, 1, 1);
+        grid.add(new Label("N° de documento:"), 0, 2);          grid.add(txtNumDoc, 1, 2);
+        grid.add(new Label("Nombres / Razón social:"), 0, 3);   grid.add(txtNombres, 1, 3);
+        grid.add(new Label("Dirección del predio:"), 0, 4);     grid.add(txtDireccion, 1, 4);
+        grid.add(new Label("Condición del solicitante:"), 0, 5);grid.add(cmbCondicion, 1, 5);
+        grid.add(new Label("Documentos que presenta:"), 0, 6);  grid.add(boxDocs, 1, 6);
 
         panelDatos.setContent(grid);
 
-        HBox botones = new HBox(12);
+        FlowPane botones = new FlowPane(12, 8);
         Button btnEnviar = new Button("Enviar solicitud");
-        btnEnviar.setStyle("-fx-background-color: #198754; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 9 20;");
-
         Button btnLimpiar = new Button("Limpiar");
-        btnLimpiar.setStyle("-fx-background-color: #64748B; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 9 20;");
 
         btnLimpiar.setOnAction(e -> {
-            txtNumDoc.clear(); txtNombres.clear(); txtDireccion.clear();
+            if (!esCliente) {
+                txtNumDoc.clear();
+                txtNombres.clear();
+            }
+            txtDireccion.clear();
             chkCarta.setSelected(false); chkAutovaluo.setSelected(false); chkCroquis.setSelected(false);
             chkPoder.setSelected(false); chkArrend.setSelected(false); chkConst.setSelected(false);
         });
 
         btnEnviar.setOnAction(e -> {
             if (txtNumDoc.getText().isBlank() || txtNombres.getText().isBlank() || txtDireccion.getText().isBlank()) {
-                new Alert(Alert.AlertType.WARNING, "Complete documento, nombre y dirección del predio.").showAndWait();
+                mostrarMensaje(Alert.AlertType.WARNING, "Campos incompletos", "Complete documento, nombre y dirección del predio.");
                 return;
             }
             boolean baseOk = chkCarta.isSelected() && chkAutovaluo.isSelected() && chkCroquis.isSelected();
             boolean inqOk = !"INQUILINO".equals(cmbCondicion.getValue()) || (chkPoder.isSelected() && chkArrend.isSelected());
             String estado = (baseOk && inqOk) ? "PENDIENTE_REVISION" : "OBSERVADA_DOCS (RN-02)";
-            String cod = String.format("SOL-%03d", ContextoDemo.listaSolicitudes.size() + 1);
+            String cod = String.format("SOL-%03d", ContextoSistema.listaSolicitudes.size() + 1);
 
-            ContextoDemo.listaSolicitudes.add(new String[]{
+            ContextoSistema.listaSolicitudes.add(new String[]{
                     cod, txtNombres.getText(), cmbTipoDoc.getValue() + ": " + txtNumDoc.getText(),
                     cmbCondicion.getValue(), txtDireccion.getText(), "NO (Libre)", estado
             });
-            new Alert(Alert.AlertType.INFORMATION, "Solicitud " + cod + " registrada con estado: " + estado).showAndWait();
+            mostrarMensaje(Alert.AlertType.INFORMATION, "Solicitud registrada", "Solicitud " + cod + " registrada con estado: " + estado);
             btnLimpiar.fire();
         });
 
@@ -110,15 +119,24 @@ public class VistaProcesoAlta {
         return root;
     }
 
-    // VISTA 1B: Bandeja de Evaluación, Factibilidad, Contrato e Instalación (HU-02 a HU-07)
+    // VISTA 1B: Estado de Solicitudes (Cliente) / Bandeja de Evaluación (Trabajadores según rol)
     public Parent vistaBandejaAlta() {
-        VBox root = new VBox(12);
-        root.setPadding(new Insets(25, 35, 25, 35));
-        root.setStyle("-fx-background-color: #F4F7FA;");
+        UsuarioDTO u = ContextoSistema.getUsuario();
+        String rol = (u != null && u.nombreRol != null) ? u.nombreRol : "";
+        boolean esCliente = "Cliente".equalsIgnoreCase(u != null ? u.categoriaRol : "");
+        boolean esAdmin = "Administrador".equalsIgnoreCase(rol);
 
-        Label lblTitulo = new Label("Bandeja de Alta de Nuevo Suministro (HU-02 a HU-07)");
-        lblTitulo.setFont(Font.font("System", FontWeight.BOLD, 20));
-        lblTitulo.setStyle("-fx-text-fill: #003B73;");
+        VBox root = new VBox(12);
+        root.setPadding(new Insets(20, 30, 20, 30));
+
+        Label lblTitulo = new Label(esCliente
+                ? "Estado de Mis Solicitudes de Suministro (HU-01)"
+                : "Bandeja de Alta de Nuevo Suministro (HU-02 a HU-07)");
+        lblTitulo.setFont(Font.font("System", FontWeight.BOLD, 18));
+
+        Label lblSub = new Label(esCliente
+                ? "Consulte el avance de su trámite. Si su expediente presenta observaciones, puede subsanar los documentos."
+                : "Operaciones habilitadas estrictamente para el rol: " + rol);
 
         TableView<String[]> tabla = new TableView<>();
         String[] headers = {"Solicitud", "Solicitante", "Documento", "Condición", "Predio", "Deuda Predio", "Estado Actual"};
@@ -129,63 +147,135 @@ public class VistaProcesoAlta {
             tabla.getColumns().add(col);
         }
         tabla.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
-        tabla.setItems(FXCollections.observableArrayList(ContextoDemo.listaSolicitudes));
 
-        HBox acciones = new HBox(10);
-        ComboBox<String> cmbTarifa = new ComboBox<>(FXCollections.observableArrayList("BT5B Residencial (3.0 kW)", "BT5B Comercial (10.0 kW)"));
-        cmbTarifa.setValue("BT5B Residencial (3.0 kW)");
+        if (esCliente && u.numeroDocumentoIdentidad != null) {
+            var propias = ContextoSistema.listaSolicitudes.stream()
+                    .filter(fila -> fila[2] != null && fila[2].contains(u.numeroDocumentoIdentidad))
+                    .toList();
+            tabla.setItems(FXCollections.observableArrayList(propias));
+        } else {
+            tabla.setItems(FXCollections.observableArrayList(ContextoSistema.listaSolicitudes));
+        }
 
-        Button btnValidar = new Button("1. Validar Docs/Predio (Auxiliar)");
-        btnValidar.setStyle("-fx-background-color: #004A80; -fx-text-fill: white; -fx-font-weight: bold;");
+        FlowPane acciones = new FlowPane(10, 8);
 
-        Button btnFactibilidad = new Button("2. Aprobar Factibilidad (Sup. Com.)");
-        btnFactibilidad.setStyle("-fx-background-color: #0D9488; -fx-text-fill: white; -fx-font-weight: bold;");
+        if (esCliente) {
+            Button btnSubsanar = new Button("Subsanar Documentos Observados (HU-01)");
+            btnSubsanar.setOnAction(e -> {
+                String[] sel = tabla.getSelectionModel().getSelectedItem();
+                if (sel == null) {
+                    mostrarMensaje(Alert.AlertType.WARNING, "Selección requerida", "Seleccione una solicitud de la tabla.");
+                    return;
+                }
+                if (!sel[6].contains("OBSERVADA")) {
+                    mostrarMensaje(Alert.AlertType.INFORMATION, "Sin observaciones", "Esta solicitud no tiene observaciones pendientes de subsanación.");
+                    return;
+                }
+                sel[6] = "PENDIENTE_REVISION (Subsanado)";
+                tabla.refresh();
+                mostrarMensaje(Alert.AlertType.INFORMATION, "Subsanación enviada", "Documentos corregidos enviados al Auxiliar Comercial (CU-07).");
+            });
+            acciones.getChildren().add(btnSubsanar);
+        }
 
-        Button btnContrato = new Button("3. Contrato y Cobro (HU-05)");
-        btnContrato.setStyle("-fx-background-color: #2563EB; -fx-text-fill: white; -fx-font-weight: bold;");
+        if (esAdmin || "Auxiliar Comercial".equalsIgnoreCase(rol)) {
+            Button btnValidar = new Button("1. Validar Docs y Predio (HU-02/03)");
+            btnValidar.setOnAction(e -> {
+                String[] sel = tabla.getSelectionModel().getSelectedItem();
+                if (sel == null) return;
+                if (sel[5].startsWith("SÍ")) {
+                    sel[6] = "RECHAZADA_POR_DEUDA (RN-04)";
+                    mostrarMensaje(Alert.AlertType.ERROR, "Trámite bloqueado", "RN-04: Predio con deuda pendiente.");
+                } else {
+                    sel[6] = "PENDIENTE_FACTIBILIDAD";
+                    mostrarMensaje(Alert.AlertType.INFORMATION, "Validación conforme", "HU-02/03: Documentos y predio conformes.");
+                }
+                tabla.refresh();
+            });
 
-        Button btnInstalarYHabilitar = new Button("4. Instalar y Habilitar (HU-06/07)");
-        btnInstalarYHabilitar.setStyle("-fx-background-color: #198754; -fx-text-fill: white; -fx-font-weight: bold;");
+            ComboBox<String> cmbTarifa = new ComboBox<>(FXCollections.observableArrayList("BT5B Residencial (3.0 kW)", "BT5B Comercial (10.0 kW)"));
+            cmbTarifa.setValue("BT5B Residencial (3.0 kW)");
 
-        btnValidar.setOnAction(e -> {
-            String[] sel = tabla.getSelectionModel().getSelectedItem();
-            if (sel == null) return;
-            if (sel[5].startsWith("SÍ")) {
-                sel[6] = "RECHAZADA_POR_DEUDA (RN-04)";
-                new Alert(Alert.AlertType.ERROR, "RN-04: Predio con deuda pendiente. Trámite bloqueado.").showAndWait();
-            } else {
-                sel[6] = "PENDIENTE_FACTIBILIDAD";
-                new Alert(Alert.AlertType.INFORMATION, "HU-02/03: Documentos y predio conformes.").showAndWait();
-            }
-            tabla.refresh();
-        });
+            Button btnContrato = new Button("3. Contratación y Cobro (HU-05)");
+            btnContrato.setOnAction(e -> {
+                String[] sel = tabla.getSelectionModel().getSelectedItem();
+                if (sel == null) return;
+                if (!sel[6].contains("FACTIBILIDAD_APROBADA")) {
+                    mostrarMensaje(Alert.AlertType.WARNING, "Requisito previo", "RN-05: Requiere factibilidad técnica aprobada previamente.");
+                    return;
+                }
+                sel[6] = "CONTRATO_PAGADO (" + cmbTarifa.getValue() + ")";
+                tabla.refresh();
+                mostrarMensaje(Alert.AlertType.INFORMATION, "Contratación completada", "HU-05: Contrato firmado y presupuesto cobrado.");
+            });
 
-        btnFactibilidad.setOnAction(e -> {
-            String[] sel = tabla.getSelectionModel().getSelectedItem();
-            if (sel == null) return;
-            sel[6] = "FACTIBILIDAD_APROBADA";
-            tabla.refresh();
-            new Alert(Alert.AlertType.INFORMATION, "HU-04: Factibilidad técnica aprobada.").showAndWait();
-        });
+            acciones.getChildren().addAll(btnValidar, cmbTarifa, btnContrato);
+        }
 
-        btnContrato.setOnAction(e -> {
-            String[] sel = tabla.getSelectionModel().getSelectedItem();
-            if (sel == null) return;
-            sel[6] = "CONTRATO_PAGADO (" + cmbTarifa.getValue() + ")";
-            tabla.refresh();
-            new Alert(Alert.AlertType.INFORMATION, "HU-05: Contrato firmado y presupuesto cobrado.").showAndWait();
-        });
+        if (esAdmin || "Supervisor de Control Comercial".equalsIgnoreCase(rol)) {
+            Button btnFactibilidad = new Button("2. Evaluar y Aprobar Factibilidad (HU-04)");
+            btnFactibilidad.setOnAction(e -> {
+                String[] sel = tabla.getSelectionModel().getSelectedItem();
+                if (sel == null) return;
+                sel[6] = "FACTIBILIDAD_APROBADA";
+                tabla.refresh();
+                mostrarMensaje(Alert.AlertType.INFORMATION, "Factibilidad aprobada", "HU-04: Factibilidad técnica aprobada.");
+            });
+            acciones.getChildren().add(btnFactibilidad);
+        }
 
-        btnInstalarYHabilitar.setOnAction(e -> {
-            String[] sel = tabla.getSelectionModel().getSelectedItem();
-            if (sel == null) return;
-            sel[6] = "SUMINISTRO_HABILITADO (Medidor Activo)";
-            tabla.refresh();
-            new Alert(Alert.AlertType.INFORMATION, "HU-06/07: Acta conforme. Suministro incorporado al cronograma mensual.").showAndWait();
-        });
+        if (esAdmin || "Supervisor de Control de Mediciones".equalsIgnoreCase(rol)) {
+            Button btnProgInst = new Button("4A. Programar Instalación Medidor (HU-06)");
+            btnProgInst.setOnAction(e -> {
+                String[] sel = tabla.getSelectionModel().getSelectedItem();
+                if (sel == null) return;
+                if (!sel[6].contains("CONTRATO_PAGADO")) {
+                    mostrarMensaje(Alert.AlertType.WARNING, "Pago pendiente", "HU-05: No se puede programar obra sin presupuesto cobrado.");
+                    return;
+                }
+                sel[6] = "INSTALACION_PROGRAMADA";
+                tabla.refresh();
+                mostrarMensaje(Alert.AlertType.INFORMATION, "Instalación programada", "CU-12: Orden enviada al Contratista de instalación.");
+            });
+            acciones.getChildren().add(btnProgInst);
+        }
 
-        acciones.getChildren().addAll(cmbTarifa, btnValidar, btnFactibilidad, btnContrato, btnInstalarYHabilitar);
-        root.getChildren().addAll(lblTitulo, tabla, acciones);
+        if (esAdmin || "Contratista de instalación".equalsIgnoreCase(rol)) {
+            Button btnEjecInst = new Button("4B. Instalar Acometida/Medidor y Enviar Acta (CU-13)");
+            btnEjecInst.setOnAction(e -> {
+                String[] sel = tabla.getSelectionModel().getSelectedItem();
+                if (sel == null) return;
+                sel[6] = "ACTA_INSTALACION_ENVIADA";
+                tabla.refresh();
+                mostrarMensaje(Alert.AlertType.INFORMATION, "Acta enviada", "CU-13: Acta de instalación remitida para inspección.");
+            });
+            acciones.getChildren().add(btnEjecInst);
+        }
+
+        if (esAdmin || "Técnico Supervisor de Mediciones".equalsIgnoreCase(rol)) {
+            Button btnHabilitar = new Button("4C. Inspeccionar y Habilitar Suministro (HU-07)");
+            btnHabilitar.setOnAction(e -> {
+                String[] sel = tabla.getSelectionModel().getSelectedItem();
+                if (sel == null) return;
+                sel[6] = "SUMINISTRO_HABILITADO (Medidor Activo)";
+                tabla.refresh();
+                mostrarMensaje(Alert.AlertType.INFORMATION, "Suministro habilitado", "HU-07: Instalación conforme. Suministro incorporado al cronograma mensual.");
+            });
+            acciones.getChildren().add(btnHabilitar);
+        }
+
+        root.getChildren().addAll(lblTitulo, lblSub, tabla);
+        if (!acciones.getChildren().isEmpty()) {
+            root.getChildren().add(acciones);
+        }
         return root;
+    }
+
+    private void mostrarMensaje(Alert.AlertType tipo, String titulo, String mensaje) {
+        Alert alert = new Alert(tipo);
+        alert.setTitle(titulo);
+        alert.setHeaderText(null);
+        alert.setContentText(mensaje);
+        alert.showAndWait();
     }
 }

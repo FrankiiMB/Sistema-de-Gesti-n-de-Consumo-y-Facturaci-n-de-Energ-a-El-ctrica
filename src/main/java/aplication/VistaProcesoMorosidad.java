@@ -1,8 +1,10 @@
 package aplication;
 
+import database.UsuarioDAO.UsuarioDTO;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -11,15 +13,17 @@ import javafx.scene.text.FontWeight;
 
 public class VistaProcesoMorosidad {
 
-    // VISTA 3A: Monitor de Morosidad y Ejecución de Cortes (HU-15 a HU-17)
+    // VISTA 3A: Monitor de Morosidad y Órdenes de Corte (HU-15 a HU-17)
     public Parent vistaMonitorMorosidadYCortes() {
+        UsuarioDTO u = ContextoSistema.getUsuario();
+        String rol = (u != null && u.nombreRol != null) ? u.nombreRol : "";
+        boolean esAdmin = "Administrador".equalsIgnoreCase(rol);
+
         VBox root = new VBox(12);
-        root.setPadding(new Insets(25, 35, 25, 35));
-        root.setStyle("-fx-background-color: #F4F7FA;");
+        root.setPadding(new Insets(20, 30, 20, 30));
 
         Label lblTitulo = new Label("Monitor de Morosidad y Órdenes de Corte (HU-15 a HU-17)");
-        lblTitulo.setFont(Font.font("System", FontWeight.BOLD, 20));
-        lblTitulo.setStyle("-fx-text-fill: #003B73;");
+        lblTitulo.setFont(Font.font("System", FontWeight.BOLD, 18));
 
         TableView<String[]> tabla = new TableView<>();
         String[] headers = {"Suministro", "Titular", "Meses Vencidos", "Deuda + Mora (15%)", "Estado del Servicio"};
@@ -30,53 +34,72 @@ public class VistaProcesoMorosidad {
             tabla.getColumns().add(col);
         }
         tabla.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
-        tabla.setItems(FXCollections.observableArrayList(ContextoDemo.listaMorosidadCortes));
+        tabla.setItems(FXCollections.observableArrayList(ContextoSistema.listaMorosidadCortes));
 
-        HBox barra = new HBox(12);
-        ComboBox<String> cmbTipoCorte = new ComboBox<>(FXCollections.observableArrayList(
-                "Tipo I (Fusible)", "Tipo II (Caja de Medición)", "Tipo III (Línea Aérea / Acometida)"
-        ));
-        cmbTipoCorte.setValue("Tipo I (Fusible)");
+        FlowPane barra = new FlowPane(12, 8);
+        barra.setAlignment(Pos.CENTER_LEFT);
 
-        Button btnProgramarCorte = new Button("Programar y Ejecutar Corte (HU-16 / HU-17)");
-        btnProgramarCorte.setStyle("-fx-background-color: #D64545; -fx-text-fill: white; -fx-font-weight: bold;");
+        if (esAdmin || "Supervisor de Cobranzas".equalsIgnoreCase(rol)
+                || "Supervisor de Control Comercial".equalsIgnoreCase(rol)
+                || "Contratista ejecutor de corte y reconexión".equalsIgnoreCase(rol)) {
 
-        Button btnAuditarCorte = new Button("Auditar Corte en Campo (Téc. Comercial)");
-        btnAuditarCorte.setStyle("-fx-background-color: #004A80; -fx-text-fill: white; -fx-font-weight: bold;");
+            ComboBox<String> cmbTipoCorte = new ComboBox<>(FXCollections.observableArrayList(
+                    "Tipo I (Fusible)", "Tipo II (Caja de Medición)", "Tipo III (Línea Aérea / Acometida)"
+            ));
+            cmbTipoCorte.setValue("Tipo I (Fusible)");
 
-        btnProgramarCorte.setOnAction(e -> {
-            String[] sel = tabla.getSelectionModel().getSelectedItem();
-            if (sel == null) return;
-            if (sel[2].startsWith("1") || sel[2].startsWith("0")) {
-                new Alert(Alert.AlertType.WARNING, "HU-15/16: El corte solo procede con 2 o más meses de deuda vencida.").showAndWait();
-                return;
-            }
-            sel[4] = "CORTADO (" + cmbTipoCorte.getValue() + ")";
-            tabla.refresh();
-            new Alert(Alert.AlertType.INFORMATION, "RN-17/18: Corte ejecutado y cargo administrativo cargado a la cuenta.").showAndWait();
-        });
+            String textoBtn = "Supervisor de Cobranzas".equalsIgnoreCase(rol)
+                    ? "Programar Orden de Corte (HU-16)"
+                    : "Ejecutar Corte en Campo (HU-17)";
 
-        btnAuditarCorte.setOnAction(e -> {
-            String[] sel = tabla.getSelectionModel().getSelectedItem();
-            if (sel == null) return;
-            sel[4] = sel[4] + " [AUDITADO OK]";
-            tabla.refresh();
-        });
+            Button btnCorte = new Button(textoBtn);
+            btnCorte.setOnAction(e -> {
+                String[] sel = tabla.getSelectionModel().getSelectedItem();
+                if (sel == null) return;
+                if (sel[2].startsWith("1") || sel[2].startsWith("0")) {
+                    mostrarMensaje(Alert.AlertType.WARNING, "Condición no cumplida", "HU-15/16: El corte solo procede con 2 o más meses de deuda vencida.");
+                    return;
+                }
+                sel[4] = "CORTADO (" + cmbTipoCorte.getValue() + ")";
+                tabla.refresh();
+                mostrarMensaje(Alert.AlertType.INFORMATION, "Orden procesada", "RN-17/18: Orden procesada y cargo administrativo cargado a la cuenta.");
+            });
 
-        barra.getChildren().addAll(new Label("Secuencia progresiva (RN-17):"), cmbTipoCorte, btnProgramarCorte, btnAuditarCorte);
-        root.getChildren().addAll(lblTitulo, tabla, barra);
+            barra.getChildren().addAll(new Label("Secuencia progresiva (RN-17):"), cmbTipoCorte, btnCorte);
+        }
+
+        if (esAdmin || "Técnico Supervisor Comercial".equalsIgnoreCase(rol)) {
+            Button btnAuditarCorte = new Button("Auditar Corte en Campo (CU-46)");
+            btnAuditarCorte.setOnAction(e -> {
+                String[] sel = tabla.getSelectionModel().getSelectedItem();
+                if (sel == null) return;
+                sel[4] = sel[4] + " [AUDITADO OK]";
+                tabla.refresh();
+            });
+            barra.getChildren().add(btnAuditarCorte);
+        }
+
+        root.getChildren().addAll(lblTitulo, tabla);
+        if (!barra.getChildren().isEmpty()) {
+            root.getChildren().add(barra);
+        }
         return root;
     }
 
-    // VISTA 3B: Entidad Recaudadora CAR, Convenios y Reconexión (HU-18 a HU-21)
+    // VISTA 3B: Pagos, Convenios y Reconexión (HU-18 a HU-21)
     public Parent vistaPagosYReconexion() {
-        VBox root = new VBox(12);
-        root.setPadding(new Insets(25, 35, 25, 35));
-        root.setStyle("-fx-background-color: #F4F7FA;");
+        UsuarioDTO u = ContextoSistema.getUsuario();
+        String rol = (u != null && u.nombreRol != null) ? u.nombreRol : "";
+        boolean esCliente = "Cliente".equalsIgnoreCase(u != null ? u.categoriaRol : "");
+        boolean esAdmin = "Administrador".equalsIgnoreCase(rol);
 
-        Label lblTitulo = new Label("Recaudación CAR, Convenios y Reconexión (HU-18 a HU-21)");
-        lblTitulo.setFont(Font.font("System", FontWeight.BOLD, 20));
-        lblTitulo.setStyle("-fx-text-fill: #003B73;");
+        VBox root = new VBox(12);
+        root.setPadding(new Insets(20, 30, 20, 30));
+
+        Label lblTitulo = new Label(esCliente
+                ? "Pagos de Deuda y Solicitud de Convenio (HU-18)"
+                : "Recaudación CAR, Convenios y Reconexión (HU-18 a HU-21)");
+        lblTitulo.setFont(Font.font("System", FontWeight.BOLD, 18));
 
         TableView<String[]> tabla = new TableView<>();
         String[] headers = {"Suministro", "Titular", "Meses Vencidos", "Deuda Total", "Estado del Servicio"};
@@ -87,50 +110,86 @@ public class VistaProcesoMorosidad {
             tabla.getColumns().add(col);
         }
         tabla.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
-        tabla.setItems(FXCollections.observableArrayList(ContextoDemo.listaMorosidadCortes));
 
-        HBox acciones = new HBox(12);
-        Button btnPagoTotal = new Button("1. Registrar Pago Total CAR y Conciliar (HU-18/19)");
-        btnPagoTotal.setStyle("-fx-background-color: #0D9488; -fx-text-fill: white; -fx-font-weight: bold;");
+        if (esCliente) {
+            var cuentasCliente = ContextoSistema.listaMorosidadCortes.stream()
+                    .filter(c -> (u.codigoSuministro != null && c[0].equalsIgnoreCase(u.codigoSuministro))
+                            || c[1].equalsIgnoreCase(u.getNombreCompleto()))
+                    .toList();
+            tabla.setItems(FXCollections.observableArrayList(cuentasCliente));
+        } else {
+            tabla.setItems(FXCollections.observableArrayList(ContextoSistema.listaMorosidadCortes));
+        }
 
-        Button btnConvenio = new Button("2. Suscribir Convenio de Pago (HU-18)");
-        btnConvenio.setStyle("-fx-background-color: #2563EB; -fx-text-fill: white; -fx-font-weight: bold;");
+        FlowPane acciones = new FlowPane(12, 8);
 
-        Button btnReconectar = new Button("3. Autorizar y Ejecutar Reconexión (HU-20/21)");
-        btnReconectar.setStyle("-fx-background-color: #198754; -fx-text-fill: white; -fx-font-weight: bold;");
+        if (esAdmin || esCliente || "Entidad Recaudadora / CAR".equalsIgnoreCase(rol)
+                || "Asistente de Recaudación".equalsIgnoreCase(rol)) {
 
-        btnPagoTotal.setOnAction(e -> {
-            String[] sel = tabla.getSelectionModel().getSelectedItem();
-            if (sel == null) return;
-            sel[2] = "0 meses";
-            sel[3] = "S/ 0.00";
-            sel[4] = "DEUDA REGULARIZADA - LISTO RECONEXIÓN";
-            tabla.refresh();
-            new Alert(Alert.AlertType.INFORMATION, "RN-20: Pago total conciliado en tiempo real.").showAndWait();
-        });
+            String labelPago = esCliente
+                    ? "Realizar Pago Total en CAR (HU-18)"
+                    : "1. Registrar / Conciliar Pago Total CAR (HU-18/19)";
 
-        btnConvenio.setOnAction(e -> {
-            String[] sel = tabla.getSelectionModel().getSelectedItem();
-            if (sel == null) return;
-            sel[4] = "CONVENIO VIGENTE - LISTO RECONEXIÓN";
-            tabla.refresh();
-            new Alert(Alert.AlertType.INFORMATION, "RN-21: Convenio de pago suscrito y aprobado.").showAndWait();
-        });
+            Button btnPagoTotal = new Button(labelPago);
+            btnPagoTotal.setOnAction(e -> {
+                String[] sel = tabla.getSelectionModel().getSelectedItem();
+                if (sel == null) return;
+                sel[2] = "0 meses";
+                sel[3] = "S/ 0.00";
+                sel[4] = "DEUDA REGULARIZADA - LISTO RECONEXIÓN";
+                tabla.refresh();
+                mostrarMensaje(Alert.AlertType.INFORMATION, "Pago registrado", "RN-20: Pago total registrado y conciliado.");
+            });
+            acciones.getChildren().add(btnPagoTotal);
+        }
 
-        btnReconectar.setOnAction(e -> {
-            String[] sel = tabla.getSelectionModel().getSelectedItem();
-            if (sel == null) return;
-            if (!sel[4].contains("LISTO RECONEXIÓN")) {
-                new Alert(Alert.AlertType.ERROR, "RN-21: No se puede reconectar sin pago total o convenio vigente.").showAndWait();
-                return;
-            }
-            sel[4] = "ACTIVO (RECONECTADO)";
-            tabla.refresh();
-            new Alert(Alert.AlertType.INFORMATION, "HU-21: Servicio restituido y cargo por reconexión agendado para el siguiente ciclo.").showAndWait();
-        });
+        if (esAdmin || esCliente || "Supervisor de Cobranzas".equalsIgnoreCase(rol)) {
+            String labelConv = esCliente
+                    ? "Solicitar Convenio de Pago (HU-18)"
+                    : "2. Aprobar Convenio de Pago (HU-18)";
 
-        acciones.getChildren().addAll(btnPagoTotal, btnConvenio, btnReconectar);
-        root.getChildren().addAll(lblTitulo, tabla, acciones);
+            Button btnConvenio = new Button(labelConv);
+            btnConvenio.setOnAction(e -> {
+                String[] sel = tabla.getSelectionModel().getSelectedItem();
+                if (sel == null) return;
+                sel[4] = "CONVENIO VIGENTE - LISTO RECONEXIÓN";
+                tabla.refresh();
+                mostrarMensaje(Alert.AlertType.INFORMATION, "Convenio aprobado", "RN-21: Convenio de pago suscrito y aprobado.");
+            });
+            acciones.getChildren().add(btnConvenio);
+        }
+
+        if (esAdmin || "Supervisor de Cobranzas".equalsIgnoreCase(rol)
+                || "Contratista ejecutor de corte y reconexión".equalsIgnoreCase(rol)
+                || "Técnico Supervisor Comercial".equalsIgnoreCase(rol)) {
+
+            Button btnReconectar = new Button("3. Autorizar y Ejecutar Reconexión (HU-20/21)");
+            btnReconectar.setOnAction(e -> {
+                String[] sel = tabla.getSelectionModel().getSelectedItem();
+                if (sel == null) return;
+                if (!sel[4].contains("LISTO RECONEXIÓN")) {
+                    mostrarMensaje(Alert.AlertType.ERROR, "Reconexión bloqueada", "RN-21: No se puede reconectar sin pago total o convenio vigente.");
+                    return;
+                }
+                sel[4] = "ACTIVO (RECONECTADO)";
+                tabla.refresh();
+                mostrarMensaje(Alert.AlertType.INFORMATION, "Servicio restituido", "HU-21: Servicio restituido y cargo por reconexión agendado para el siguiente ciclo.");
+            });
+            acciones.getChildren().add(btnReconectar);
+        }
+
+        root.getChildren().addAll(lblTitulo, tabla);
+        if (!acciones.getChildren().isEmpty()) {
+            root.getChildren().add(acciones);
+        }
         return root;
+    }
+
+    private void mostrarMensaje(Alert.AlertType tipo, String titulo, String mensaje) {
+        Alert alert = new Alert(tipo);
+        alert.setTitle(titulo);
+        alert.setHeaderText(null);
+        alert.setContentText(mensaje);
+        alert.showAndWait();
     }
 }

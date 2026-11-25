@@ -6,16 +6,29 @@ import java.sql.SQLException;
 
 public class ConexionDB {
 
-    private static final String HOST = "localhost"; // En 3 PC: poner IP de la PC servidor (ej. 100.85.12.10)
-    private static final String PUERTO = "1433";
-    private static final String BASE_DATOS = "EnergiaElectricaDB";
-    private static final String USER = "sa";
-    private static final String PASS = "404110602"; // <-- Cambia por la contraseña de tu SQL Server
+    private static ConexionDB instancia;
+    private Connection conexion;
+    // Recuerda: en la laptop usa "localhost"; en las otras PC pon la IP de la laptop
+    private final String url =
+        "jdbc:sqlserver://localhost:1433;databaseName=EnergiaElectricaDB;encrypt=true;trustServerCertificate=true;"
+        + "user=sa; password=404110602;";
 
-    private static final String URL = "jdbc:sqlserver://" + HOST + ":" + PUERTO
-            + ";databaseName=" + BASE_DATOS + ";encrypt=false;trustServerCertificate=true;";
+    private ConexionDB() throws SQLException {
+        try {
+            conexion = DriverManager.getConnection(url);
+        } catch (SQLException e) {
+            throw e;
+        }
+    }
 
-    public static Connection getConexion() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASS);
+    public static ConexionDB getInstancia() throws SQLException {
+        if (instancia == null || instancia.getConexion() == null || instancia.getConexion().isClosed()) {
+            instancia = new ConexionDB();
+        }
+        return instancia;
+    }
+
+    public Connection getConexion() {
+        return conexion;
     }
 }
