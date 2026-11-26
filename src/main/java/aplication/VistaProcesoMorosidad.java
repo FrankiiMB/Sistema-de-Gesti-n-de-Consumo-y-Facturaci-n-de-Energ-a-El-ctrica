@@ -13,7 +13,7 @@ import javafx.scene.text.FontWeight;
 
 public class VistaProcesoMorosidad {
 
-    // VISTA 3A: Monitor de Morosidad y Órdenes de Corte (HU-15 a HU-17)
+    // VISTA 3A: Monitor de Morosidad y Órdenes de Corte
     public Parent vistaMonitorMorosidadYCortes() {
         UsuarioDTO u = ContextoSistema.getUsuario();
         String rol = (u != null && u.nombreRol != null) ? u.nombreRol : "";
@@ -22,7 +22,7 @@ public class VistaProcesoMorosidad {
         VBox root = new VBox(12);
         root.setPadding(new Insets(20, 30, 20, 30));
 
-        Label lblTitulo = new Label("Monitor de Morosidad y Órdenes de Corte (HU-15 a HU-17)");
+        Label lblTitulo = new Label("Monitor de Morosidad y Órdenes de Corte");
         lblTitulo.setFont(Font.font("System", FontWeight.BOLD, 18));
 
         TableView<String[]> tabla = new TableView<>();
@@ -49,27 +49,27 @@ public class VistaProcesoMorosidad {
             cmbTipoCorte.setValue("Tipo I (Fusible)");
 
             String textoBtn = "Supervisor de Cobranzas".equalsIgnoreCase(rol)
-                    ? "Programar Orden de Corte (HU-16)"
-                    : "Ejecutar Corte en Campo (HU-17)";
+                    ? "Programar Orden de Corte"
+                    : "Ejecutar Corte en Campo";
 
             Button btnCorte = new Button(textoBtn);
             btnCorte.setOnAction(e -> {
                 String[] sel = tabla.getSelectionModel().getSelectedItem();
                 if (sel == null) return;
                 if (sel[2].startsWith("1") || sel[2].startsWith("0")) {
-                    mostrarMensaje(Alert.AlertType.WARNING, "Condición no cumplida", "HU-15/16: El corte solo procede con 2 o más meses de deuda vencida.");
+                    mostrarMensaje(Alert.AlertType.WARNING, "Condición no cumplida", "El corte solo procede con 2 o más meses de deuda vencida.");
                     return;
                 }
                 sel[4] = "CORTADO (" + cmbTipoCorte.getValue() + ")";
                 tabla.refresh();
-                mostrarMensaje(Alert.AlertType.INFORMATION, "Orden procesada", "RN-17/18: Orden procesada y cargo administrativo cargado a la cuenta.");
+                mostrarMensaje(Alert.AlertType.INFORMATION, "Orden procesada", "Orden procesada y cargo administrativo cargado a la cuenta.");
             });
 
-            barra.getChildren().addAll(new Label("Secuencia progresiva (RN-17):"), cmbTipoCorte, btnCorte);
+            barra.getChildren().addAll(new Label("Secuencia progresiva:"), cmbTipoCorte, btnCorte);
         }
 
         if (esAdmin || "Técnico Supervisor Comercial".equalsIgnoreCase(rol)) {
-            Button btnAuditarCorte = new Button("Auditar Corte en Campo (CU-46)");
+            Button btnAuditarCorte = new Button("Auditar Corte en Campo");
             btnAuditarCorte.setOnAction(e -> {
                 String[] sel = tabla.getSelectionModel().getSelectedItem();
                 if (sel == null) return;
@@ -86,7 +86,7 @@ public class VistaProcesoMorosidad {
         return root;
     }
 
-    // VISTA 3B: Pagos, Convenios y Reconexión (HU-18 a HU-21)
+    // VISTA 3B: Pagos, Convenios y Reconexión
     public Parent vistaPagosYReconexion() {
         UsuarioDTO u = ContextoSistema.getUsuario();
         String rol = (u != null && u.nombreRol != null) ? u.nombreRol : "";
@@ -97,8 +97,8 @@ public class VistaProcesoMorosidad {
         root.setPadding(new Insets(20, 30, 20, 30));
 
         Label lblTitulo = new Label(esCliente
-                ? "Pagos de Deuda y Solicitud de Convenio (HU-18)"
-                : "Recaudación CAR, Convenios y Reconexión (HU-18 a HU-21)");
+                ? "Pagos de Deuda y Solicitud de Convenio"
+                : "Recaudación CAR, Convenios y Reconexión");
         lblTitulo.setFont(Font.font("System", FontWeight.BOLD, 18));
 
         TableView<String[]> tabla = new TableView<>();
@@ -127,8 +127,8 @@ public class VistaProcesoMorosidad {
                 || "Asistente de Recaudación".equalsIgnoreCase(rol)) {
 
             String labelPago = esCliente
-                    ? "Realizar Pago Total en CAR (HU-18)"
-                    : "1. Registrar / Conciliar Pago Total CAR (HU-18/19)";
+                    ? "Realizar Pago Total en CAR"
+                    : "1. Registrar / Conciliar Pago Total CAR";
 
             Button btnPagoTotal = new Button(labelPago);
             btnPagoTotal.setOnAction(e -> {
@@ -138,15 +138,15 @@ public class VistaProcesoMorosidad {
                 sel[3] = "S/ 0.00";
                 sel[4] = "DEUDA REGULARIZADA - LISTO RECONEXIÓN";
                 tabla.refresh();
-                mostrarMensaje(Alert.AlertType.INFORMATION, "Pago registrado", "RN-20: Pago total registrado y conciliado.");
+                mostrarMensaje(Alert.AlertType.INFORMATION, "Pago registrado", "Pago total registrado y conciliado.");
             });
             acciones.getChildren().add(btnPagoTotal);
         }
 
         if (esAdmin || esCliente || "Supervisor de Cobranzas".equalsIgnoreCase(rol)) {
             String labelConv = esCliente
-                    ? "Solicitar Convenio de Pago (HU-18)"
-                    : "2. Aprobar Convenio de Pago (HU-18)";
+                    ? "Solicitar Convenio de Pago"
+                    : "2. Aprobar Convenio de Pago";
 
             Button btnConvenio = new Button(labelConv);
             btnConvenio.setOnAction(e -> {
@@ -154,7 +154,7 @@ public class VistaProcesoMorosidad {
                 if (sel == null) return;
                 sel[4] = "CONVENIO VIGENTE - LISTO RECONEXIÓN";
                 tabla.refresh();
-                mostrarMensaje(Alert.AlertType.INFORMATION, "Convenio aprobado", "RN-21: Convenio de pago suscrito y aprobado.");
+                mostrarMensaje(Alert.AlertType.INFORMATION, "Convenio aprobado", "Convenio de pago suscrito y aprobado.");
             });
             acciones.getChildren().add(btnConvenio);
         }
@@ -163,17 +163,17 @@ public class VistaProcesoMorosidad {
                 || "Contratista ejecutor de corte y reconexión".equalsIgnoreCase(rol)
                 || "Técnico Supervisor Comercial".equalsIgnoreCase(rol)) {
 
-            Button btnReconectar = new Button("3. Autorizar y Ejecutar Reconexión (HU-20/21)");
+            Button btnReconectar = new Button("3. Autorizar y Ejecutar Reconexión");
             btnReconectar.setOnAction(e -> {
                 String[] sel = tabla.getSelectionModel().getSelectedItem();
                 if (sel == null) return;
                 if (!sel[4].contains("LISTO RECONEXIÓN")) {
-                    mostrarMensaje(Alert.AlertType.ERROR, "Reconexión bloqueada", "RN-21: No se puede reconectar sin pago total o convenio vigente.");
+                    mostrarMensaje(Alert.AlertType.ERROR, "Reconexión bloqueada", "No se puede reconectar sin pago total o convenio vigente.");
                     return;
                 }
                 sel[4] = "ACTIVO (RECONECTADO)";
                 tabla.refresh();
-                mostrarMensaje(Alert.AlertType.INFORMATION, "Servicio restituido", "HU-21: Servicio restituido y cargo por reconexión agendado para el siguiente ciclo.");
+                mostrarMensaje(Alert.AlertType.INFORMATION, "Servicio restituido", "Servicio restituido y cargo por reconexión agendado para el siguiente ciclo.");
             });
             acciones.getChildren().add(btnReconectar);
         }

@@ -12,15 +12,15 @@ import javafx.scene.text.FontWeight;
 
 public class VistaProcesoAlta {
 
-    // VISTA 1A: Formulario del Cliente (HU-01 y RN-02)
+    // VISTA 1A: Formulario del Cliente
     public Parent vistaPresentarSolicitud() {
         VBox root = new VBox(12);
         root.setPadding(new Insets(20, 30, 20, 30));
 
-        Label lblTitulo = new Label("Presentar solicitud de nuevo suministro (HU-01)");
+        Label lblTitulo = new Label("Presentar solicitud de nuevo suministro");
         lblTitulo.setFont(Font.font("System", FontWeight.BOLD, 18));
 
-        Label lblSub = new Label("El propietario o inquilino con carta poder presenta su solicitud y marca los documentos adjuntos (RN-02).");
+        Label lblSub = new Label("El propietario o inquilino con carta poder presenta su solicitud y marca los documentos adjuntos.");
 
         TitledPane panelDatos = new TitledPane();
         panelDatos.setText("Datos del solicitante y documentos");
@@ -103,7 +103,7 @@ public class VistaProcesoAlta {
             }
             boolean baseOk = chkCarta.isSelected() && chkAutovaluo.isSelected() && chkCroquis.isSelected();
             boolean inqOk = !"INQUILINO".equals(cmbCondicion.getValue()) || (chkPoder.isSelected() && chkArrend.isSelected());
-            String estado = (baseOk && inqOk) ? "PENDIENTE_REVISION" : "OBSERVADA_DOCS (RN-02)";
+            String estado = (baseOk && inqOk) ? "PENDIENTE_REVISION" : "OBSERVADA_DOCS";
             String cod = String.format("SOL-%03d", ContextoSistema.listaSolicitudes.size() + 1);
 
             ContextoSistema.listaSolicitudes.add(new String[]{
@@ -130,8 +130,8 @@ public class VistaProcesoAlta {
         root.setPadding(new Insets(20, 30, 20, 30));
 
         Label lblTitulo = new Label(esCliente
-                ? "Estado de Mis Solicitudes de Suministro (HU-01)"
-                : "Bandeja de Alta de Nuevo Suministro (HU-02 a HU-07)");
+                ? "Estado de Mis Solicitudes de Suministro"
+                : "Bandeja de Alta de Nuevo Suministro");
         lblTitulo.setFont(Font.font("System", FontWeight.BOLD, 18));
 
         Label lblSub = new Label(esCliente
@@ -160,7 +160,7 @@ public class VistaProcesoAlta {
         FlowPane acciones = new FlowPane(10, 8);
 
         if (esCliente) {
-            Button btnSubsanar = new Button("Subsanar Documentos Observados (HU-01)");
+            Button btnSubsanar = new Button("Subsanar Documentos Observados");
             btnSubsanar.setOnAction(e -> {
                 String[] sel = tabla.getSelectionModel().getSelectedItem();
                 if (sel == null) {
@@ -173,22 +173,22 @@ public class VistaProcesoAlta {
                 }
                 sel[6] = "PENDIENTE_REVISION (Subsanado)";
                 tabla.refresh();
-                mostrarMensaje(Alert.AlertType.INFORMATION, "Subsanación enviada", "Documentos corregidos enviados al Auxiliar Comercial (CU-07).");
+                mostrarMensaje(Alert.AlertType.INFORMATION, "Subsanación enviada", "Documentos corregidos enviados al Auxiliar Comercial.");
             });
             acciones.getChildren().add(btnSubsanar);
         }
 
         if (esAdmin || "Auxiliar Comercial".equalsIgnoreCase(rol)) {
-            Button btnValidar = new Button("1. Validar Docs y Predio (HU-02/03)");
+            Button btnValidar = new Button("1. Validar Docs y Predio");
             btnValidar.setOnAction(e -> {
                 String[] sel = tabla.getSelectionModel().getSelectedItem();
                 if (sel == null) return;
                 if (sel[5].startsWith("SÍ")) {
-                    sel[6] = "RECHAZADA_POR_DEUDA (RN-04)";
-                    mostrarMensaje(Alert.AlertType.ERROR, "Trámite bloqueado", "RN-04: Predio con deuda pendiente.");
+                    sel[6] = "RECHAZADA_POR_DEUDA";
+                    mostrarMensaje(Alert.AlertType.ERROR, "Trámite bloqueado", "Predio con deuda pendiente.");
                 } else {
                     sel[6] = "PENDIENTE_FACTIBILIDAD";
-                    mostrarMensaje(Alert.AlertType.INFORMATION, "Validación conforme", "HU-02/03: Documentos y predio conformes.");
+                    mostrarMensaje(Alert.AlertType.INFORMATION, "Validación conforme", "Documentos y predio conformes.");
                 }
                 tabla.refresh();
             });
@@ -196,70 +196,70 @@ public class VistaProcesoAlta {
             ComboBox<String> cmbTarifa = new ComboBox<>(FXCollections.observableArrayList("BT5B Residencial (3.0 kW)", "BT5B Comercial (10.0 kW)"));
             cmbTarifa.setValue("BT5B Residencial (3.0 kW)");
 
-            Button btnContrato = new Button("3. Contratación y Cobro (HU-05)");
+            Button btnContrato = new Button("3. Contratación y Cobro");
             btnContrato.setOnAction(e -> {
                 String[] sel = tabla.getSelectionModel().getSelectedItem();
                 if (sel == null) return;
                 if (!sel[6].contains("FACTIBILIDAD_APROBADA")) {
-                    mostrarMensaje(Alert.AlertType.WARNING, "Requisito previo", "RN-05: Requiere factibilidad técnica aprobada previamente.");
+                    mostrarMensaje(Alert.AlertType.WARNING, "Requisito previo", "Requiere factibilidad técnica aprobada previamente.");
                     return;
                 }
                 sel[6] = "CONTRATO_PAGADO (" + cmbTarifa.getValue() + ")";
                 tabla.refresh();
-                mostrarMensaje(Alert.AlertType.INFORMATION, "Contratación completada", "HU-05: Contrato firmado y presupuesto cobrado.");
+                mostrarMensaje(Alert.AlertType.INFORMATION, "Contratación completada", "Contrato firmado y presupuesto cobrado.");
             });
 
             acciones.getChildren().addAll(btnValidar, cmbTarifa, btnContrato);
         }
 
         if (esAdmin || "Supervisor de Control Comercial".equalsIgnoreCase(rol)) {
-            Button btnFactibilidad = new Button("2. Evaluar y Aprobar Factibilidad (HU-04)");
+            Button btnFactibilidad = new Button("2. Evaluar y Aprobar Factibilidad");
             btnFactibilidad.setOnAction(e -> {
                 String[] sel = tabla.getSelectionModel().getSelectedItem();
                 if (sel == null) return;
                 sel[6] = "FACTIBILIDAD_APROBADA";
                 tabla.refresh();
-                mostrarMensaje(Alert.AlertType.INFORMATION, "Factibilidad aprobada", "HU-04: Factibilidad técnica aprobada.");
+                mostrarMensaje(Alert.AlertType.INFORMATION, "Factibilidad aprobada", "Factibilidad técnica aprobada.");
             });
             acciones.getChildren().add(btnFactibilidad);
         }
 
         if (esAdmin || "Supervisor de Control de Mediciones".equalsIgnoreCase(rol)) {
-            Button btnProgInst = new Button("4A. Programar Instalación Medidor (HU-06)");
+            Button btnProgInst = new Button("4A. Programar Instalación Medidor");
             btnProgInst.setOnAction(e -> {
                 String[] sel = tabla.getSelectionModel().getSelectedItem();
                 if (sel == null) return;
                 if (!sel[6].contains("CONTRATO_PAGADO")) {
-                    mostrarMensaje(Alert.AlertType.WARNING, "Pago pendiente", "HU-05: No se puede programar obra sin presupuesto cobrado.");
+                    mostrarMensaje(Alert.AlertType.WARNING, "Pago pendiente", "No se puede programar obra sin presupuesto cobrado.");
                     return;
                 }
                 sel[6] = "INSTALACION_PROGRAMADA";
                 tabla.refresh();
-                mostrarMensaje(Alert.AlertType.INFORMATION, "Instalación programada", "CU-12: Orden enviada al Contratista de instalación.");
+                mostrarMensaje(Alert.AlertType.INFORMATION, "Instalación programada", "Orden enviada al Contratista de instalación.");
             });
             acciones.getChildren().add(btnProgInst);
         }
 
         if (esAdmin || "Contratista de instalación".equalsIgnoreCase(rol)) {
-            Button btnEjecInst = new Button("4B. Instalar Acometida/Medidor y Enviar Acta (CU-13)");
+            Button btnEjecInst = new Button("4B. Instalar Acometida/Medidor y Enviar Acta");
             btnEjecInst.setOnAction(e -> {
                 String[] sel = tabla.getSelectionModel().getSelectedItem();
                 if (sel == null) return;
                 sel[6] = "ACTA_INSTALACION_ENVIADA";
                 tabla.refresh();
-                mostrarMensaje(Alert.AlertType.INFORMATION, "Acta enviada", "CU-13: Acta de instalación remitida para inspección.");
+                mostrarMensaje(Alert.AlertType.INFORMATION, "Acta enviada", "Acta de instalación remitida para inspección.");
             });
             acciones.getChildren().add(btnEjecInst);
         }
 
         if (esAdmin || "Técnico Supervisor de Mediciones".equalsIgnoreCase(rol)) {
-            Button btnHabilitar = new Button("4C. Inspeccionar y Habilitar Suministro (HU-07)");
+            Button btnHabilitar = new Button("4C. Inspeccionar y Habilitar Suministro");
             btnHabilitar.setOnAction(e -> {
                 String[] sel = tabla.getSelectionModel().getSelectedItem();
                 if (sel == null) return;
                 sel[6] = "SUMINISTRO_HABILITADO (Medidor Activo)";
                 tabla.refresh();
-                mostrarMensaje(Alert.AlertType.INFORMATION, "Suministro habilitado", "HU-07: Instalación conforme. Suministro incorporado al cronograma mensual.");
+                mostrarMensaje(Alert.AlertType.INFORMATION, "Suministro habilitado", "Instalación conforme. Suministro incorporado al cronograma mensual.");
             });
             acciones.getChildren().add(btnHabilitar);
         }
