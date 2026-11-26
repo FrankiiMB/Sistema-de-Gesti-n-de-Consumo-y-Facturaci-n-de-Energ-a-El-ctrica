@@ -44,13 +44,13 @@ public class VistaProcesoAlta {
         cmbTipoDoc.setMaxWidth(Double.MAX_VALUE);
 
         TextField txtNumDoc = new TextField(esCliente && u.numeroDocumentoIdentidad != null ? u.numeroDocumentoIdentidad : "");
-        txtNumDoc.setPromptText("Ej. 46892310");
+        txtNumDoc.setPromptText("Ej. 87654321");
 
         TextField txtNombres = new TextField(esCliente ? u.getNombreCompleto() : "");
         txtNombres.setPromptText("Nombres y apellidos / Razón social");
 
         TextField txtDireccion = new TextField(esCliente && u.direccion != null ? u.direccion : "");
-        txtDireccion.setPromptText("Dirección del predio (Ej. Av. Pacífico 320)");
+        txtDireccion.setPromptText("Dirección del predio");
 
         ComboBox<String> cmbCondicion = new ComboBox<>(FXCollections.observableArrayList("PROPIETARIO", "INQUILINO"));
         cmbCondicion.setValue(esCliente && u.condicionCliente != null ? u.condicionCliente : "PROPIETARIO");
@@ -134,9 +134,12 @@ public class VistaProcesoAlta {
                 : "Bandeja de Alta de Nuevo Suministro");
         lblTitulo.setFont(Font.font("System", FontWeight.BOLD, 18));
 
-        Label lblSub = new Label(esCliente
-                ? "Consulte el avance de su trámite. Si su expediente presenta observaciones, puede subsanar los documentos."
-                : "Operaciones habilitadas estrictamente para el rol: " + rol);
+        root.getChildren().add(lblTitulo);
+
+        if (esCliente) {
+            Label lblSub = new Label("Consulte el avance de su trámite. Si su expediente presenta observaciones, puede subsanar los documentos.");
+            root.getChildren().add(lblSub);
+        }
 
         TableView<String[]> tabla = new TableView<>();
         String[] headers = {"Solicitud", "Solicitante", "Documento", "Condición", "Predio", "Deuda Predio", "Estado Actual"};
@@ -196,7 +199,7 @@ public class VistaProcesoAlta {
             ComboBox<String> cmbTarifa = new ComboBox<>(FXCollections.observableArrayList("BT5B Residencial (3.0 kW)", "BT5B Comercial (10.0 kW)"));
             cmbTarifa.setValue("BT5B Residencial (3.0 kW)");
 
-            Button btnContrato = new Button("3. Contratación y Cobro");
+            Button btnContrato = new Button("Contratación y Cobro");
             btnContrato.setOnAction(e -> {
                 String[] sel = tabla.getSelectionModel().getSelectedItem();
                 if (sel == null) return;
@@ -225,7 +228,7 @@ public class VistaProcesoAlta {
         }
 
         if (esAdmin || "Supervisor de Control de Mediciones".equalsIgnoreCase(rol)) {
-            Button btnProgInst = new Button("4A. Programar Instalación Medidor");
+            Button btnProgInst = new Button("Programar Instalación Medidor");
             btnProgInst.setOnAction(e -> {
                 String[] sel = tabla.getSelectionModel().getSelectedItem();
                 if (sel == null) return;
@@ -241,7 +244,7 @@ public class VistaProcesoAlta {
         }
 
         if (esAdmin || "Contratista de instalación".equalsIgnoreCase(rol)) {
-            Button btnEjecInst = new Button("4B. Instalar Acometida/Medidor y Enviar Acta");
+            Button btnEjecInst = new Button("Instalar Acometida/Medidor y Enviar Acta");
             btnEjecInst.setOnAction(e -> {
                 String[] sel = tabla.getSelectionModel().getSelectedItem();
                 if (sel == null) return;
@@ -253,7 +256,7 @@ public class VistaProcesoAlta {
         }
 
         if (esAdmin || "Técnico Supervisor de Mediciones".equalsIgnoreCase(rol)) {
-            Button btnHabilitar = new Button("4C. Inspeccionar y Habilitar Suministro");
+            Button btnHabilitar = new Button("Inspeccionar y Habilitar Suministro");
             btnHabilitar.setOnAction(e -> {
                 String[] sel = tabla.getSelectionModel().getSelectedItem();
                 if (sel == null) return;
@@ -264,7 +267,7 @@ public class VistaProcesoAlta {
             acciones.getChildren().add(btnHabilitar);
         }
 
-        root.getChildren().addAll(lblTitulo, lblSub, tabla);
+        root.getChildren().add(tabla);
         if (!acciones.getChildren().isEmpty()) {
             root.getChildren().add(acciones);
         }

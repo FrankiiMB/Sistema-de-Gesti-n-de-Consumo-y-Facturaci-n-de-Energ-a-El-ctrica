@@ -43,7 +43,7 @@ public class UsuarioDAO {
         public String telefono;
         public String correo;
 
-        // Soporte para doble perfil (Trabajador + Cliente)
+        //Doble perfil para trabajadores que tambien son clientes
         public boolean tienePerfilTrabajador;
         public boolean tienePerfilCliente;
         public String rolTrabajador;
@@ -69,7 +69,7 @@ public class UsuarioDAO {
         }
     }
 
-    // 1. Catálogo de roles con sus siglas de 3 letras
+    //Lista de roles con sus abreviaciones de 3 letras
     public List<RolDTO> listarRoles() {
         return List.of(
                 new RolDTO(1, "Sistema", "Administrador", "ADM"),
@@ -91,7 +91,7 @@ public class UsuarioDAO {
         );
     }
 
-    // 2. Generar siguiente código correlativo para trabajador (Ej. AXC-001, AXC-002)
+    //Generar siguiente código para trabajador
     public String generarSiguienteCodigoTrabajador(String prefijo) {
         int maxCorrelativo = 0;
         String sql = "SELECT codigo_trabajador FROM trabajadores WHERE codigo_trabajador LIKE ?";
@@ -117,13 +117,11 @@ public class UsuarioDAO {
         return String.format("%s-%03d", prefijo, maxCorrelativo + 1);
     }
 
-    // 3. Autenticación:
-    //    - Trabajadores: DNI/RUC o Código de Trabajador
-    //    - Clientes: DNI/RUC o Código de Suministro
+    // Autenticacion
     public UsuarioDTO autenticar(String identificador, String clave) throws SQLException {
         try (Connection con = ConexionDB.getInstancia().getConexion()) {
 
-            // A) Buscar en Trabajadores
+            //Buscar en Trabajadores
             String sqlTrab = """
                     SELECT p.id_persona, p.id_rol, r.nombre_rol, r.categoria,
                            p.nombres, p.apellidos, p.tipo_persona, p.tipo_documento,
@@ -164,7 +162,7 @@ public class UsuarioDAO {
                 }
             }
 
-            // B) Buscar en Clientes (solo por DNI/RUC o codigo_suministro)
+            //Buscar en Clientes
             String sqlCli = """
                     SELECT p.id_persona, p.id_rol, r.nombre_rol AS rol_persona, r.categoria AS cat_persona,
                            p.nombres, p.apellidos, p.tipo_persona, p.tipo_documento,
@@ -209,7 +207,7 @@ public class UsuarioDAO {
         return null;
     }
 
-    // 4A. Registrar cuenta de Cliente (sin campo usuario_cliente)
+    //Registrar cuenta de cliente
     public boolean registrarCliente(String clave, String nombres, String apellidos,
                                     String tipoPersona, String tipoDoc, String numDoc,
                                     String condicionCliente, String direccion,
@@ -260,7 +258,7 @@ public class UsuarioDAO {
         }
     }
 
-    // 4B. Registrar Trabajador / Contratista / Administrador
+    //Registrar trabajador
     public boolean registrarTrabajador(String codigoTrabajador, String clave, int idRol, String nombres,
                                        String apellidos, String tipoPersona, String tipoDoc,
                                        String numDoc, String direccion, String telefono, String correo) throws SQLException {
@@ -318,7 +316,7 @@ public class UsuarioDAO {
         }
     }
 
-    // 5. Actualizar datos de contacto y contraseña del Cliente
+    //Actualizar datos de contacto y contraseña del Cliente
     public boolean actualizarDatosCliente(int idPersona, String direccion, String telefono,
                                           String correo, String nuevaClave) throws SQLException {
         String sqlPersona = "UPDATE personas SET direccion = ?, telefono = ?, correo = ? WHERE id_persona = ?";
@@ -348,7 +346,7 @@ public class UsuarioDAO {
         }
     }
 
-    // 6. Listar todas las cuentas registradas
+    //Listar todas las cuentas registradas
     public List<UsuarioDTO> listarUsuarios() {
         List<UsuarioDTO> lista = new ArrayList<>();
         String sql = """

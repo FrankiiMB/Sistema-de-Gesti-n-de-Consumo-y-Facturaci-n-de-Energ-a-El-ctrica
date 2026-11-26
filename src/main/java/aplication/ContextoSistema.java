@@ -10,8 +10,6 @@ public class ContextoSistema {
     private static UsuarioDTO usuarioActual;
 
     // Almacenamiento temporal en memoria entre cambios de sesión
-    // (se mantiene activo durante la ejecución para probar el flujo entre roles
-    // hasta conectar SolicitudDAO, LecturaDAO y MorosidadDAO)
     public static final List<String[]> listaSolicitudes = new ArrayList<>();
     public static final List<String[]> listaLecturasRecibos = new ArrayList<>();
     public static final List<String[]> listaMorosidadCortes = new ArrayList<>();

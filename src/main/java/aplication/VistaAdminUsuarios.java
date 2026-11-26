@@ -25,10 +25,8 @@ public class VistaAdminUsuarios {
         Label lblTitulo = new Label("Gestión de Cuentas de Trabajadores y Contratistas");
         lblTitulo.setFont(Font.font("System", FontWeight.BOLD, 18));
 
-        Label lblSub = new Label("Registre el personal interno, asigne su puesto/rol y genere automáticamente su código institucional.");
-
         TitledPane panelCrear = new TitledPane();
-        panelCrear.setText("Crear nueva cuenta de trabajador / contratista");
+        panelCrear.setText("Crear nueva cuenta");
         panelCrear.setCollapsible(false);
 
         GridPane grid = new GridPane();
@@ -69,9 +67,9 @@ public class VistaAdminUsuarios {
         txtUsuarioAuto.setEditable(false);
 
         PasswordField txtClave = new PasswordField();
-        txtClave.setPromptText("Contraseña asignada");
+        txtClave.setPromptText("Ingrese contraseña");
 
-        Button btnGuardar = new Button("Registrar Trabajador en Base de Datos");
+        Button btnGuardar = new Button("Registrar");
         btnGuardar.setMinWidth(Region.USE_PREF_SIZE);
 
         Runnable actualizarCodigoGenerado = () -> {
@@ -193,7 +191,7 @@ public class VistaAdminUsuarios {
             }
         });
 
-        root.getChildren().addAll(lblTitulo, lblSub, panelCrear, new Label("Cuentas Registradas en SQL Server:"), tabla);
+        root.getChildren().addAll(lblTitulo, panelCrear, new Label("Cuentas Registradas:"), tabla);
         return root;
     }
 

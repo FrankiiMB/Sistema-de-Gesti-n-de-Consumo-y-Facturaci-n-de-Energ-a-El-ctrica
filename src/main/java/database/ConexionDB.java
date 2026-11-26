@@ -8,7 +8,6 @@ public class ConexionDB {
 
     private static ConexionDB instancia;
     private Connection conexion;
-    // Recuerda: en la laptop usa "localhost"; en las otras PC pon la IP de la laptop
     private final String url =
         "jdbc:sqlserver://localhost:1433;databaseName=EnergiaElectricaDB;encrypt=true;trustServerCertificate=true;"
         + "user=sa; password=404110602;";

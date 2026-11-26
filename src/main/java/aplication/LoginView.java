@@ -70,12 +70,33 @@ public class LoginView {
 
         Label lblUser = new Label("DNI / RUC / Código:");
         TextField txtUser = new TextField();
-        //txtUser.setPromptText("Ej. DNI, RUC, Suministro o AXC-001");
+        txtUser.setPromptText("Ingrese su usuario");
 
         Label lblPass = new Label("Contraseña:");
         VBox.setMargin(lblPass, new Insets(6, 0, 0, 0));
+
         PasswordField txtPass = new PasswordField();
         txtPass.setPromptText("Ingrese su contraseña");
+
+        TextField txtPassVisible = new TextField();
+        txtPassVisible.setPromptText("Ingrese su contraseña");
+        txtPassVisible.setVisible(false);
+        txtPassVisible.setManaged(false);
+        txtPassVisible.textProperty().bindBidirectional(txtPass.textProperty());
+
+        ToggleButton btnVerPass = new ToggleButton("👁");
+        btnVerPass.setFocusTraversable(false);
+        btnVerPass.setOnAction(e -> {
+            boolean ver = btnVerPass.isSelected();
+            txtPassVisible.setVisible(ver);
+            txtPassVisible.setManaged(ver);
+            txtPass.setVisible(!ver);
+            txtPass.setManaged(!ver);
+        });
+
+        StackPane stackPassLogin = new StackPane(txtPass, txtPassVisible);
+        HBox.setHgrow(stackPassLogin, Priority.ALWAYS);
+        HBox boxPassLogin = new HBox(6, stackPassLogin, btnVerPass);
 
         Label lblError = new Label();
         lblError.setWrapText(true);
@@ -95,31 +116,32 @@ public class LoginView {
             String pass = txtPass.getText();
 
             if (user.isEmpty() || pass.isEmpty()) {
-                lblError.setText("Ingrese usuario y contraseña.");
+                lblError.setText("Debe ingresar obligatoriamente su identificador y contraseña.");
                 return;
             }
 
             try {
                 UsuarioDTO autenticado = usuarioDAO.autenticar(user, pass);
                 if (autenticado == null) {
-                    lblError.setText("Usuario o contraseña incorrectas.");
+                    lblError.setText("Credenciales incorrectas.");
                     return;
                 }
                 ContextoSistema.setUsuario(autenticado);
                 app.mostrarDashboard();
             } catch (SQLException ex) {
                 System.err.println("Detalle SQL: " + ex.getMessage());
-                lblError.setText("Hubo un error de conexión.");
+                lblError.setText("Hubo un error de conexión con la base de datos.");
             }
         };
 
         btnIngresar.setOnAction(e -> accionLogin.run());
         txtUser.setOnAction(e -> accionLogin.run());
         txtPass.setOnAction(e -> accionLogin.run());
+        txtPassVisible.setOnAction(e -> accionLogin.run());
 
         form.getChildren().addAll(
                 lblTitulo, lblSub,
-                lblUser, txtUser, lblPass, txtPass,
+                lblUser, txtUser, lblPass, boxPassLogin,
                 lblError, btnIngresar, linkCrearCuenta
         );
 
@@ -129,8 +151,8 @@ public class LoginView {
 
     private void abrirDialogoRegistroCliente(TextField txtUserLogin, PasswordField txtPassLogin) {
         Dialog<Void> dialog = new Dialog<>();
-        dialog.setTitle("Registro de Cliente - Hidrandina S.A.");
-        dialog.setHeaderText("Crear cuenta de Cliente / Titular del suministro");
+        dialog.setTitle("Registro de Clientes");
+        dialog.setHeaderText("Crear cuenta");
 
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
         Node btnCloseOculto = dialog.getDialogPane().lookupButton(ButtonType.CLOSE);
@@ -141,7 +163,7 @@ public class LoginView {
         contenedor.setPadding(new Insets(18, 22, 16, 22));
         contenedor.setPrefWidth(450);
 
-        // --- Indicador visual de pasos (1. Identificación -> 2. Contraseña) ---
+        //Indicador visual de pasos
         Label lblCirculo1 = new Label("1");
         lblCirculo1.setAlignment(Pos.CENTER);
         lblCirculo1.setPrefSize(28, 28);
@@ -169,7 +191,7 @@ public class LoginView {
 
         VBox stepper = new VBox(4, filaCirculos, filaTextos);
 
-        // ==================== PASO 1: IDENTIFICACIÓN ====================
+        //Paso 1
         GridPane gridPaso1 = new GridPane();
         gridPaso1.setHgap(12);
         gridPaso1.setVgap(10);
@@ -260,7 +282,7 @@ public class LoginView {
 
         VBox panePaso1 = new VBox(12, gridPaso1, botonesPaso1);
 
-        // ==================== PASO 2: CONTRASEÑA ====================
+        // Paso 2
         PasswordField txtClaveOculta = new PasswordField();
         txtClaveOculta.setPromptText("Cree una contraseña");
         TextField txtClaveVisible = new TextField();
@@ -270,6 +292,7 @@ public class LoginView {
         txtClaveVisible.textProperty().bindBidirectional(txtClaveOculta.textProperty());
 
         ToggleButton btnVer1 = new ToggleButton("👁");
+        btnVer1.setFocusTraversable(false);
         btnVer1.setOnAction(e -> {
             boolean ver = btnVer1.isSelected();
             txtClaveVisible.setVisible(ver);
@@ -291,6 +314,7 @@ public class LoginView {
         txtConfirmVisible.textProperty().bindBidirectional(txtConfirmOculta.textProperty());
 
         ToggleButton btnVer2 = new ToggleButton("👁");
+        btnVer2.setFocusTraversable(false);
         btnVer2.setOnAction(e -> {
             boolean ver = btnVer2.isSelected();
             txtConfirmVisible.setVisible(ver);
@@ -355,7 +379,7 @@ public class LoginView {
         panePaso2.setVisible(false);
         panePaso2.setManaged(false);
 
-        //Transición Paso 1 a Paso 2
+        // Transición Paso 1 a Paso 2
         btnSiguiente.setOnAction(e -> {
             boolean esJuridica = "JURIDICA".equals(cmbTipoPersona.getValue());
             String tipoDoc = cmbTipoDoc.getValue();
@@ -391,7 +415,7 @@ public class LoginView {
             }
         });
 
-        // --- Transición Paso 2 -> Paso 1 ---
+        // Transición Paso 2 a Paso 1
         btnVolver.setOnAction(e -> {
             lblCirculo1.setText("1");
             lblCirculo1.setStyle("-fx-background-color: #0078B9; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 14;");
@@ -410,7 +434,7 @@ public class LoginView {
             }
         });
 
-        //Guardado final en la base de datos
+        // Guardado final en la base de datos
         btnRegistrarme.setOnAction(e -> {
             boolean esJuridica = "JURIDICA".equals(cmbTipoPersona.getValue());
             String tipoDoc = cmbTipoDoc.getValue();
