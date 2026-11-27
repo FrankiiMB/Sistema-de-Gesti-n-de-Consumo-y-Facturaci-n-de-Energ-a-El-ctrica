@@ -2,10 +2,8 @@ package lecturafacturacionyrepartoderecibos;
 
 public enum EstadoPeriodo {
 
-	PROGRAMADO,
-
-	EN_PROCESO,
-
-	CERRADO;
+    PROGRAMADO,
+    EN_PROCESO,
+    CERRADO;
 
 }

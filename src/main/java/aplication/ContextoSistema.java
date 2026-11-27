@@ -9,8 +9,7 @@ public class ContextoSistema {
     // Usuario real autenticado desde SQL Server
     private static UsuarioDTO usuarioActual;
 
-    // Almacenamiento temporal en memoria entre cambios de sesión
-    public static final List<String[]> listaSolicitudes = new ArrayList<>();
+    // Pendientes de migrar a sus respectivos DAOs (Procesos 2 y 3)
     public static final List<String[]> listaLecturasRecibos = new ArrayList<>();
     public static final List<String[]> listaMorosidadCortes = new ArrayList<>();
 
