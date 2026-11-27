@@ -1,6 +1,5 @@
 package morosidadcorteyreconexion;
 
-
 import altanuevosuministro.OrdenServicio;
 
 public interface EjecutarOrden {
